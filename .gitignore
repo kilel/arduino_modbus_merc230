@@ -26,3 +26,16 @@
 *.exe
 *.out
 *.app
+/Makefile
+/nbproject/Makefile-Debug.mk
+/nbproject/private/Makefile-variables.mk
+/nbproject/private/private.xml
+/nbproject/Makefile-variables.mk
+/nbproject/Package-Release.bash
+/nbproject/private/configurations.xml
+/nbproject/Package-Debug.bash
+/nbproject/private/launcher.properties
+/nbproject/project.xml
+/nbproject/Makefile-Release.mk
+/nbproject/Makefile-impl.mk
+/nbproject/configurations.xml
