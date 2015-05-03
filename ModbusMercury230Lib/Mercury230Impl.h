@@ -3,6 +3,8 @@
 
 #include <Mercury230.h>
 
+#include "MercuryServer.h"
+
 class Mercury230Impl : public Mercury230 {
 public:
     Mercury230Impl(const byte id);
@@ -27,8 +29,13 @@ public:
     virtual EnergyLevel getEnergyForPrevDayBegin();
 
     virtual EnergyLevelPhase getPhaseActiveEnergyLevel();
+    
+    void setServer(MercuryServer *server) {
+        this->server = server;
+    }
 
 private:
+    MercuryServer *server;
 
 };
 
