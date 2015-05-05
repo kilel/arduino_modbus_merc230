@@ -36,6 +36,19 @@ public:
 
 private:
     MercuryServer *server;
+    
+    int* sendEnergyRequest(byte opCode);
+    int* sendEnergyMonthRequest(byte opCode, byte month);
+    int* sendEnergyPhaseRequest(byte opCode);
+    
+    EnergyLevel buildEnergyLevel(int *response);
+    EnergyLevelPhase buildEnergyPhase(int *response);
+    
+    static const int REQ_LENGTH_ENERGY_LEVEL = 16; // TODO
+    static const int RESP_LENGTH_ENERGY_LEVEL = 16; // TODO
+    
+    static const int REQ_LENGTH_ENERGY_PHASE = 16; // TODO
+    static const int RESP_LENGTH_ENERGY_PHASE = 12; // TODO
 
 };
 
