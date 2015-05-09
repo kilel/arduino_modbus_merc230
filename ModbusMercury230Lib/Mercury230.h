@@ -35,7 +35,7 @@ public:
 
     virtual void echo() = 0;
 
-    virtual int auth(int authLevel, String password) = 0;
+    virtual int auth(byte authLevel, String password) = 0;
 
     virtual EnergyLevel getEnergyFromReset() = 0;
 

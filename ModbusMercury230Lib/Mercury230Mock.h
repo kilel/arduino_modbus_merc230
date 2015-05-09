@@ -10,7 +10,7 @@ public:
 
     virtual void echo();
 
-    virtual int auth(int authLevel, String password);
+    virtual int auth(byte authLevel, String password);
 
     virtual EnergyLevel getEnergyFromReset();
 

@@ -10,7 +10,7 @@ void Mercury230Mock::echo() {
 
 }
 
-int Mercury230Mock::auth(int authLevel, String password) {
+int Mercury230Mock::auth(byte authLevel, String password) {
     if (authLevel == 1 && String("111111").equals(password)) {
         return 0;
     } else if (authLevel == 2 && String("222222").equals(password)) {

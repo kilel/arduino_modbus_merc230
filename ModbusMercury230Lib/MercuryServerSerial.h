@@ -9,9 +9,9 @@ public:
     virtual ~MercuryServerSerial();
     
 
-    virtual int* process(int length, int* data, int resLength);
+    virtual int* process(int length, byte* data, int resLength);
     
-    setPort(HardwareSerial *value) {
+    void setPort(HardwareSerial *value) {
         this->port = value;
     }
 

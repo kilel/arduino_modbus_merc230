@@ -8,7 +8,7 @@ public:
     MercuryServer();
     virtual ~MercuryServer();
 
-    virtual int* process(int length, int* data, int resLength) = 0;
+    virtual int* process(int length, byte* data, int resLength) = 0;
 private:
 
 };

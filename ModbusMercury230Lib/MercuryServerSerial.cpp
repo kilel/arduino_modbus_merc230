@@ -6,7 +6,7 @@ MercuryServerSerial::MercuryServerSerial() {
 MercuryServerSerial::~MercuryServerSerial() {
 }
 
-int* MercuryServerSerial::process(int length, int* data, int resLength) {
+int* MercuryServerSerial::process(int length, byte* data, int resLength) {
     port->write(data, length);
     port->flush();
     
