@@ -1,9 +1,6 @@
 #include <MercuryModbusIntegrator.h>
 
-void logString(String data) {
-    //Uncomment to activate logging spam to Serial
-    //Serial.println(data);
-}
+#include "MercuryException.h"
 
 MercuryModbusIntegrator::MercuryModbusIntegrator() :
 deviceCount(0),
@@ -36,7 +33,7 @@ void MercuryModbusIntegrator::run() {
 
 void MercuryModbusIntegrator::createRegBank(byte deviceId) {
     logString("Creating modbus device: " + String(deviceId));
-    
+
     regBank = modbusDevice();
     regBank.setId(deviceId);
 
@@ -114,6 +111,12 @@ void MercuryModbusIntegrator::registerEnergyPhase(int deviceIndex, word startInd
 }
 
 void MercuryModbusIntegrator::updateEnergyLevel(int deviceIndex, word startIndex, EnergyLevel level) {
+    if (level.cause != 0) {
+        logString("Error updating energy level from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
+                + " device index: " + String(deviceIndex) + ". Cause: " + level.cause->getMessage());
+        return;
+    }
+
     logString("Updating energy level from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
             + " device index: " + String(deviceIndex));
     doWriteData(getDeviceSpan(deviceIndex) + startIndex, level.active);
@@ -123,6 +126,12 @@ void MercuryModbusIntegrator::updateEnergyLevel(int deviceIndex, word startIndex
 }
 
 void MercuryModbusIntegrator::updateEnergyPhase(int deviceIndex, word startIndex, EnergyLevelPhase level) {
+    if (level.cause != 0) {
+        logString("Updating energy phase from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
+                + " device index: " + String(deviceIndex) + ". Cause: " + level.cause->getMessage());
+        return;
+    }
+
     logString("Updating energy phase from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
             + " device index: " + String(deviceIndex));
     for (int i = 0; i < 3; ++i) {
@@ -135,9 +144,13 @@ void MercuryModbusIntegrator::doWriteData(word cell, word value) {
     slave._device->set(cell, value);
 }
 
-
 word MercuryModbusIntegrator::getDeviceSpan(int deviceIndex) {
     return deviceIndex * KEY_SPAN_BETWEEN_DEVICES;
 }
 
+void MercuryModbusIntegrator::logString(String data) {
+    if (debugMode) {
+        Serial.println(data);
+    }
+}
 

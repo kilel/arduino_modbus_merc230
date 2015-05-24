@@ -2,6 +2,7 @@
 
 #include "MercuryServer.h"
 #include "Mercury230.h"
+#include "MercuryException.h"
 
 Mercury230Impl::Mercury230Impl(const byte id) : Mercury230(id) {
 }
@@ -9,7 +10,15 @@ Mercury230Impl::Mercury230Impl(const byte id) : Mercury230(id) {
 Mercury230Impl::~Mercury230Impl() {
 }
 
-void Mercury230Impl::echo() {
+void Mercury230Impl::setServer(MercuryServer* server) {
+    this->server = server;
+}
+
+int Mercury230Impl::echo() {
+    int *response = sendEcho();
+    int result = response[1];
+    delete[] response;
+    return result;
 }
 
 int Mercury230Impl::auth(byte authLevel, String password) {
@@ -20,51 +29,90 @@ int Mercury230Impl::auth(byte authLevel, String password) {
 }
 
 EnergyLevel Mercury230Impl::getEnergyFromReset() {
-    return buildEnergyLevel(sendEnergyRequest(0x0));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0x0, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForYear() {
-    return buildEnergyLevel(sendEnergyRequest(0x1));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0x1, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForPrevYear() {
-    return buildEnergyLevel(sendEnergyRequest(0x2));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0x2, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForMonth(byte month) {
-    return buildEnergyLevel(sendEnergyMonthRequest(0x3, month));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyMonthRequest(0x3, month, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForDay() {
-    return buildEnergyLevel(sendEnergyRequest(0x4));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0x4, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForPrevDay() {
-    return buildEnergyLevel(sendEnergyRequest(0x5));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0x5, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForYearBegin() {
-    return buildEnergyLevel(sendEnergyRequest(0x9));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0x9, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForPrevYearBegin() {
-    return buildEnergyLevel(sendEnergyRequest(0xA));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0xA, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForMonthBegin(byte month) {
-    return buildEnergyLevel(sendEnergyMonthRequest(0xB, month));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyMonthRequest(0xB, month, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForDayBegin() {
-    return buildEnergyLevel(sendEnergyRequest(0xC));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0xC, cause), cause);
 }
 
 EnergyLevel Mercury230Impl::getEnergyForPrevDayBegin() {
-    return buildEnergyLevel(sendEnergyRequest(0xD));
+    MercuryException *cause = 0;
+    return buildEnergyLevel(sendEnergyRequest(0xD, cause), cause);
 }
 
 EnergyLevelPhase Mercury230Impl::getPhaseActiveEnergyLevel() {
-    return buildEnergyPhase(sendEnergyPhaseRequest(0x6));
+    MercuryException *cause = 0;
+    return buildEnergyPhase(sendEnergyPhaseRequest(0x6, cause), cause);
+}
+
+int* Mercury230Impl::sendEcho() {
+    uint8_t *request = new uint8_t[REQ_LENGTH_ECHO];
+
+    //add device id to request and fill all data with zero bytes.
+    preProcessRequest(request, REQ_LENGTH_ECHO);
+
+    //fill request
+    request[1] = 0x0; //operation code
+
+    //calc CRC
+    fillCRC(request, REQ_LENGTH_ECHO);
+
+    //send
+    int resLength = 0;
+    int *response = server->process(REQ_LENGTH_ECHO, request, resLength);
+    MercuryException* cause = checkResult(response, resLength, RESP_LENGTH_ECHO);
+    
+    if(cause != 0) {
+        //original response is deleted now, create new
+        response = new int[2]; 
+        response[1] = 1; //write error code
+    }
+
+    delete[] request;
+    return response;
 }
 
 int* Mercury230Impl::sendAuthRequest(byte authLevel, String password) {
@@ -89,24 +137,33 @@ int* Mercury230Impl::sendAuthRequest(byte authLevel, String password) {
     fillCRC(request, REQ_LENGTH_AUTH);
 
     //send
-    int *response = server->process(REQ_LENGTH_AUTH, request, RESP_LENGTH_AUTH);
+    int resLength = 0;
+    int *response = server->process(REQ_LENGTH_AUTH, request, resLength);
+    MercuryException* cause = checkResult(response, resLength, RESP_LENGTH_AUTH);
+    
+    if(cause != 0) {
+        //original response is deleted now, create new
+        response = new int[2]; 
+        response[1] = 1; //write error code
+    }
+
     delete[] request;
     return response;
 }
 
-int* Mercury230Impl::sendEnergyRequest(byte opCode) {
-    return sendEnergyMonthRequest(opCode, 0);
+int* Mercury230Impl::sendEnergyRequest(byte opCode, MercuryException *&cause) {
+    return sendEnergyMonthRequest(opCode, 0, cause);
 }
 
-int* Mercury230Impl::sendEnergyMonthRequest(byte opCode, byte month) {
+int* Mercury230Impl::sendEnergyMonthRequest(byte opCode, byte month, MercuryException *&cause) {
     uint8_t *request = new uint8_t[REQ_LENGTH_ENERGY_LEVEL];
 
     //add device id to request and fill all data with zero bytes.
     preProcessRequest(request, REQ_LENGTH_ENERGY_LEVEL);
 
     //fill request
-    request[1] = 0x1; // operation code
-    request[2] = ENERGY_REQ_CODE;
+    request[1] = ENERGY_REQ_CODE;
+    request[2] = 0x1; // operation code
     request[3] = opCode << 4 | (month & 0xF); //in one byte: (opCode | month)
     request[4] = ENERGY_REQ_TARIFF;
 
@@ -114,20 +171,23 @@ int* Mercury230Impl::sendEnergyMonthRequest(byte opCode, byte month) {
     fillCRC(request, REQ_LENGTH_ENERGY_LEVEL);
 
     //send
-    int *response = server->process(REQ_LENGTH_ENERGY_LEVEL, request, RESP_LENGTH_ENERGY_LEVEL);
+    int resLength = 0;
+    int *response = server->process(REQ_LENGTH_ENERGY_LEVEL, request, resLength);
+    cause = checkResult(response, resLength, RESP_LENGTH_ENERGY_LEVEL);
+
     delete[] request;
-    return response;
+    return response; //return builded data
 }
 
-int* Mercury230Impl::sendEnergyPhaseRequest(byte opCode) {
+int* Mercury230Impl::sendEnergyPhaseRequest(byte opCode, MercuryException *&cause) {
     uint8_t *request = new uint8_t[REQ_LENGTH_ENERGY_LEVEL];
 
     //add device id to request and fill all data with zero bytes.
     preProcessRequest(request, REQ_LENGTH_ENERGY_LEVEL);
 
     //fill request
-    request[1] = 0x1; // operation code
-    request[2] = ENERGY_REQ_CODE;
+    request[1] = ENERGY_REQ_CODE;
+    request[2] = 0x6; // operation code
     request[3] = opCode << 4; //in one byte: (opCode | 0)
     request[4] = ENERGY_REQ_TARIFF;
 
@@ -135,7 +195,10 @@ int* Mercury230Impl::sendEnergyPhaseRequest(byte opCode) {
     fillCRC(request, REQ_LENGTH_ENERGY_LEVEL);
 
     //send
-    int *response = server->process(REQ_LENGTH_ENERGY_LEVEL, request, RESP_LENGTH_ENERGY_PHASE);
+    int resLength = 0;
+    int *response = server->process(REQ_LENGTH_ENERGY_LEVEL, request, resLength);
+    cause = checkResult(response, resLength, RESP_LENGTH_ENERGY_PHASE);
+
     delete[] request;
     return response;
 }
@@ -166,16 +229,16 @@ void Mercury230Impl::preProcessRequest(byte* data, int length) {
     }
 }
 
-EnergyLevel Mercury230Impl::buildEnergyLevel(int* response) {
+EnergyLevel Mercury230Impl::buildEnergyLevel(int* response, MercuryException *cause) {
     word *data = parseEnergyValue(response, 4);
-    EnergyLevel result = EnergyLevel(data[0], data[1], data[2], data[3]);
+    EnergyLevel result = EnergyLevel(data[0], data[1], data[2], data[3], cause);
     delete[] data;
     return result;
 }
 
-EnergyLevelPhase Mercury230Impl::buildEnergyPhase(int* response) {
+EnergyLevelPhase Mercury230Impl::buildEnergyPhase(int* response, MercuryException *cause) {
     word *data = parseEnergyValue(response, 3);
-    EnergyLevelPhase result = EnergyLevelPhase(data[0], data[1], data[2]);
+    EnergyLevelPhase result = EnergyLevelPhase(data[0], data[1], data[2], cause);
     delete[] data;
     return result;
 }
@@ -197,6 +260,35 @@ word* Mercury230Impl::parseEnergyValue(int* response, int count) {
     }
 
     return data;
+}
+
+MercuryException* Mercury230Impl::checkResult(int *response, int length, int expectedLength) {
+    if (length != expectedLength) {
+        delete[] response;
+        return new MercuryException(String("Response length is expected to be ") + String(expectedLength) + String("but was ") + String(length));
+    }
+
+    byte *tempData = new byte[length];
+    for (int i = 0; i < length; ++i) {
+        tempData[i] = (byte) response[i];
+    }
+
+    int crc = (tempData[length - 2] << 8) & tempData[length - 1];
+    fillCRC(tempData, length);
+    int correctCrc = (tempData[length - 2] << 8) & tempData[length - 1];
+
+    if (crc != correctCrc) {
+        delete[] response;
+        return new MercuryException(String("Response CRC is incorrect"));
+    }
+
+    if (response[0] != id) {
+        delete[] response;
+        return new MercuryException(String("Response came from device ") + String(response[0]) + String("but expected from ") + String(id));
+    }
+    
+    //Success
+    return 0;
 }
 
 

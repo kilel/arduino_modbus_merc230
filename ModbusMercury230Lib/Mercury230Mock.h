@@ -8,7 +8,7 @@ public:
     Mercury230Mock(const byte id);
     virtual ~Mercury230Mock();
 
-    virtual void echo();
+    virtual int echo();
 
     virtual int auth(byte authLevel, String password);
 

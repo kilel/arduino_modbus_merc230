@@ -5,12 +5,17 @@
 
 class MercuryServer {
 public:
-    MercuryServer();
-    virtual ~MercuryServer();
+    MercuryServer(): baud(1) {}
+    virtual ~MercuryServer() {}
 
-    virtual int* process(int length, byte* data, int resLength) = 0;
+    virtual int* process(int length, byte* data, int &resLength) = 0;
+    
+    void setBaud (int value) {
+        baud = value;
+    }
 private:
-
+protected:
+    int baud;
 };
 
 #endif	/* MERCURYSERVER_H */

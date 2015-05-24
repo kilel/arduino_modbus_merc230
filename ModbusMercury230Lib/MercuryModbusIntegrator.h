@@ -7,6 +7,8 @@
 
 class MercuryModbusIntegrator {
 public:
+    bool debugMode;
+    
     MercuryModbusIntegrator();
     virtual ~MercuryModbusIntegrator();
 
@@ -43,6 +45,8 @@ private:
     void doWriteData(word cell, word value);
 
     word getDeviceSpan(int deviceIndex);
+    
+    void logString(String data);
 
     static const word ENERGY_LEVEL_FIELDS = 4;
     static const word ENERGY_PHASE_FIELDS = 3;

@@ -6,8 +6,8 @@ Mercury230Mock::Mercury230Mock(const byte id) : Mercury230(id) {
 Mercury230Mock::~Mercury230Mock() {
 }
 
-void Mercury230Mock::echo() {
-
+int Mercury230Mock::echo() {
+    return 0;
 }
 
 int Mercury230Mock::auth(byte authLevel, String password) {

@@ -3,24 +3,42 @@
 
 #include <Arduino.h>
 
+#include "MercuryException.h"
+
 struct EnergyLevel {
     const word active;
     const word activeRevers;
     const word passive;
     const word passiveRevers;
 
-    EnergyLevel(word a, word aR, word p, word pR) :
+    MercuryException* cause;
+
+    EnergyLevel(word a, word aR, word p, word pR, MercuryException *cause = 0) :
     active(a),
     activeRevers(aR),
     passive(p),
-    passiveRevers(pR) {
+    passiveRevers(pR),
+    cause(cause) {
+    }
+    
+    ~EnergyLevel() {
+        if(cause != 0) {
+            delete cause;
+        }
     }
 };
 
 struct EnergyLevelPhase {
     const word phase[3];
+    MercuryException *cause;
+
+    EnergyLevelPhase(word a, word b, word c, MercuryException *cause = 0) : phase({a, b, c}), cause(cause) {
+    }
     
-    EnergyLevelPhase(word a, word b, word c): phase({a, b, c}) {
+    ~EnergyLevelPhase() {
+        if(cause != 0) {
+            delete cause;
+        }
     }
 };
 
@@ -30,10 +48,11 @@ public:
 
     Mercury230(const byte id) : id(id) {
     }
-    virtual ~Mercury230(){
+
+    virtual ~Mercury230() {
     }
 
-    virtual void echo() = 0;
+    virtual int echo() = 0;
 
     virtual int auth(byte authLevel, String password) = 0;
 
@@ -50,9 +69,9 @@ public:
     virtual EnergyLevel getEnergyForMonthBegin(byte month) = 0;
     virtual EnergyLevel getEnergyForDayBegin() = 0;
     virtual EnergyLevel getEnergyForPrevDayBegin() = 0;
-    
+
     virtual EnergyLevelPhase getPhaseActiveEnergyLevel() = 0;
-    
+
 
 private:
 

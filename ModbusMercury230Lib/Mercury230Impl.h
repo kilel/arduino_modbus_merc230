@@ -5,17 +5,17 @@
 
 #include <MercuryServer.h>
 
+#include "MercuryException.h"
+
 class Mercury230Impl : public Mercury230 {
 public:
     Mercury230Impl(const byte id);
     virtual ~Mercury230Impl();
 
-    virtual void echo();
-
+    virtual int echo();
     virtual int auth(byte authLevel, String password);
 
     virtual EnergyLevel getEnergyFromReset();
-
     virtual EnergyLevel getEnergyForYear();
     virtual EnergyLevel getEnergyForPrevYear();
     virtual EnergyLevel getEnergyForMonth(byte month);
@@ -30,25 +30,31 @@ public:
 
     virtual EnergyLevelPhase getPhaseActiveEnergyLevel();
 
-    void setServer(MercuryServer *server) {
-        this->server = server;
-    }
+    void setServer(MercuryServer *server);
 
 private:
     MercuryServer *server;
 
+    int* sendEcho();
     int* sendAuthRequest(byte authLevel, String password);
-    int* sendEnergyRequest(byte opCode);
-    int* sendEnergyMonthRequest(byte opCode, byte month);
-    int* sendEnergyPhaseRequest(byte opCode);
+    int* sendEnergyRequest(byte opCode, MercuryException *&cause);
+    int* sendEnergyMonthRequest(byte opCode, byte month, MercuryException *&cause);
+    int* sendEnergyPhaseRequest(byte opCode, MercuryException *&cause);
 
     void fillCRC(byte* data, int length);
     word calcCRC(byte* data, int length);
     void preProcessRequest(byte* data, int length);
 
-    EnergyLevel buildEnergyLevel(int *response);
-    EnergyLevelPhase buildEnergyPhase(int *response);
+    EnergyLevel buildEnergyLevel(int *response, MercuryException *cause);
+    EnergyLevelPhase buildEnergyPhase(int *response, MercuryException *cause);
     word* parseEnergyValue(int* response, int count);
+    
+    MercuryException* checkResult(int *response, int length, int expectedLength);
+
+    //1 (addr) + 1 (reqCode) + 2 (CRC)
+    static const int REQ_LENGTH_ECHO = 4;
+    //1 (addr) + 1 (code) + 2 (CRC)
+    static const int RESP_LENGTH_ECHO = 4;
 
     //1 (addr) + 1 (reqCode) + 1 (authLevel) + 6 (pwd) + 2 (CRC)
     static const int REQ_LENGTH_AUTH = 11;

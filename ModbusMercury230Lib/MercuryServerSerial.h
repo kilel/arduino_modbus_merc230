@@ -7,16 +7,24 @@ class MercuryServerSerial : public MercuryServer {
 public:
     MercuryServerSerial();
     virtual ~MercuryServerSerial();
-    
 
-    virtual int* process(int length, byte* data, int resLength);
-    
+
+    virtual int* process(int length, byte* data, int &resLength);
+
     void setPort(HardwareSerial *value) {
         this->port = value;
     }
 
+    bool debugMode;
+
 private:
     HardwareSerial *port;
+    
+    template <class T>
+    void logData(T *data, int length, bool isRequest);
+    
+    int calcDelay();
+    int* readResponse(int &length);
 
 };
 
