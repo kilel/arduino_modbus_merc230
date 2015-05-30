@@ -11,6 +11,8 @@
 #include <modbusRegBank.h>
 #include <modbus.h>
 
+//TODO add variables for mercury port and debug port
+
 bool debugMode = true;
 
 const int authLevel = 1;
@@ -28,9 +30,10 @@ void setup() {
   server->setPort(&Serial);
   device->setServer(server);
   Serial.begin(mercuryBaud);
+  Serial1.begin(mercuryBaud);
 }
 
 void loop() {
-  device->echo();
+  device->auth(authLevel, password);
   delay(5000);
 }

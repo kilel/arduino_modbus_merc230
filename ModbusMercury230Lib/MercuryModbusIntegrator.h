@@ -8,6 +8,7 @@
 class MercuryModbusIntegrator {
 public:
     bool debugMode;
+	HardwareSerial *debugLogger;
     
     MercuryModbusIntegrator();
     virtual ~MercuryModbusIntegrator();
@@ -26,6 +27,10 @@ public:
     void setPassword(String value) {
         this->password = value;
     }
+	
+	void setModbusPort(HardwareSerial *port) {
+		slave.modbusPort = port;
+	}
 
 private:
     int deviceCount;
@@ -36,6 +41,8 @@ private:
     int authLevel;
     String password;
 
+	HardwareSerial *logPort;
+	
     void createRegBank(byte deviceId);
     void registerEnergyLevel(int deviceIndex, word startIndex);
     void registerEnergyPhase(int deviceIndex, word startIndex);

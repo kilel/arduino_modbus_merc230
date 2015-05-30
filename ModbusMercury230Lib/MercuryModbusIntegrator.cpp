@@ -149,8 +149,8 @@ word MercuryModbusIntegrator::getDeviceSpan(int deviceIndex) {
 }
 
 void MercuryModbusIntegrator::logString(String data) {
-    if (debugMode) {
-        Serial.println(data);
+    if (debugMode && debugLogger != 0) {
+        debugLogger->println(data);
     }
 }
 

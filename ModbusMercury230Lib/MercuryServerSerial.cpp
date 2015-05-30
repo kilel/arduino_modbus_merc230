@@ -20,30 +20,31 @@ int* MercuryServerSerial::process(int length, byte* data, int &resLength) {
 
 template<class T>
 void MercuryServerSerial::logData(T* data, int length, bool isRequest) {
-    if (!debugMode) {
+    if (!debugMode || logger == 0) {
         return;
     }
     
     //TODO: write in HEX with leading zeros
 
     if (isRequest) {
-        Serial.write("#Request: \n");
+        logger->write("#Request: \n");
     } else {
-        Serial.write("#Response: \n");
+        logger->write("#Response: \n");
     }
 
     for (int i = 0; i < length; ++i) {
-        Serial.print((byte) data[i], HEX);
-        //Serial.write(convertToHex(data[i])); //write String convertToHex(byte) function
+        logger->print((byte) data[i], HEX);
+        logger->write(" ");
+        //Serial.write(convertToHex(data[i]));
+		//write String convertToHex(byte) function
     }
 
-    Serial.write("\n\n");
+    logger->write("\n\n");
 }
 
 int MercuryServerSerial::calcDelay() {
     //TODO: implement correct response read
-    if(baud < 5000) return 3000;
-    else return 200;
+    return 1000;
 }
 
 int* MercuryServerSerial::readResponse(int& length) {

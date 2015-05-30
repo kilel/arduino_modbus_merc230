@@ -1,12 +1,20 @@
+#include <Mercury230.h>
+#include <Mercury230Impl.h>
+#include <Mercury230Mock.h>
+#include <MercuryException.h>
+#include <MercuryModbusIntegrator.h>
+#include <MercuryServer.h>
+#include <MercuryServerSerial.h>
+
 #include <modbusDevice.h>
 #include <modbusSlave.h>
 #include <modbusRegBank.h>
 #include <modbus.h>
 
-#include <MercuryModbusIntegrator.h>
-#include <Mercury230.h>
-#include <Mercury230Impl.h>
-#include <Mercury230Mock.h>
+HardwareSerial *mercuryPort = &Serial1;
+HardwareSerial *modbusPort = &Serial;
+HardwareSerial *debugLogger = &Serial1;
+bool debugMode = false;
 
 const int authLevel = 1;
 String password = "111111";
@@ -41,6 +49,8 @@ void setup() {
   integrator.setAuthLevel(authLevel);
   integrator.setPassword(password);
   integrator.init(modbusBaud, modbusDeviceId);
+  integrator.setModbusPort(modbusPort);
+  integrator.debugLogger = debugLogger;
 }
 
 //TODO make updating data run each N seconds.

@@ -16,6 +16,7 @@ public:
     }
 
     bool debugMode;
+	HardwareSerial *logger;
 
 private:
     HardwareSerial *port;

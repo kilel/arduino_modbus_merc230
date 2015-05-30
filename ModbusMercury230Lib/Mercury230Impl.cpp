@@ -95,7 +95,7 @@ int* Mercury230Impl::sendEcho() {
     preProcessRequest(request, REQ_LENGTH_ECHO);
 
     //fill request
-    request[1] = 0x0; //operation code
+    request[1] = 0x00; //operation code
 
     //calc CRC
     fillCRC(request, REQ_LENGTH_ECHO);
@@ -122,14 +122,14 @@ int* Mercury230Impl::sendAuthRequest(byte authLevel, String password) {
     preProcessRequest(request, REQ_LENGTH_AUTH);
 
     //fill request
-    request[1] = 0x1; // operation code
+    request[1] = 0x01; // operation code
     request[2] = authLevel;
 
     int pwdLength = password.length();
     for (int i = 0; i < 6; ++i) {
         //read data from password, if it has it.
         //if password is too short, fill with 0.
-        byte data = i >= pwdLength ? 0 : password.charAt(i);
+        byte data = i >= pwdLength ? 0 : (password.charAt(i) - '0');
         request[3 + i] = data;
     }
 
@@ -163,9 +163,9 @@ int* Mercury230Impl::sendEnergyMonthRequest(byte opCode, byte month, MercuryExce
 
     //fill request
     request[1] = ENERGY_REQ_CODE;
-    request[2] = 0x1; // operation code
-    request[3] = opCode << 4 | (month & 0xF); //in one byte: (opCode | month)
-    request[4] = ENERGY_REQ_TARIFF;
+    //request[2] = 0x01; // operation code
+    request[2] = opCode << 4 | (month & 0xF); //in one byte: (opCode | month)
+    request[3] = ENERGY_REQ_TARIFF;
 
     //calc CRC
     fillCRC(request, REQ_LENGTH_ENERGY_LEVEL);
@@ -187,9 +187,9 @@ int* Mercury230Impl::sendEnergyPhaseRequest(byte opCode, MercuryException *&caus
 
     //fill request
     request[1] = ENERGY_REQ_CODE;
-    request[2] = 0x6; // operation code
-    request[3] = opCode << 4; //in one byte: (opCode | 0)
-    request[4] = ENERGY_REQ_TARIFF;
+    //request[2] = 0x6; // operation code
+    request[2] = opCode << 4; //in one byte: (opCode | 0)
+    request[3] = ENERGY_REQ_TARIFF;
 
     //calc CRC
     fillCRC(request, REQ_LENGTH_ENERGY_LEVEL);

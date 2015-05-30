@@ -68,8 +68,8 @@ private:
     // 1 (addr) + 3*4=12 (levels) + 2 (CRC)
     static const int RESP_LENGTH_ENERGY_PHASE = 15;
 
-    static const int ENERGY_REQ_CODE = 0x5;
-    static const int ENERGY_REQ_TARIFF = 0x1;
+    static const int ENERGY_REQ_CODE = 0x05;
+    static const int ENERGY_REQ_TARIFF = 0x00;
 };
 
 // Table of CRC values for high order byte
