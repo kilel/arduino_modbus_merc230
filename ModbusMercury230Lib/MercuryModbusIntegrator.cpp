@@ -82,12 +82,12 @@ void MercuryModbusIntegrator::updateData() {
                 updateEnergyLevel(
                         deviceIndex,
                         KEY_ENERGY_MONTH + month * ENERGY_LEVEL_FIELDS,
-                        devices[deviceIndex]->getEnergyForMonth(month)
+                        devices[deviceIndex]->getEnergyForMonth(month + 1)
                         );
                 updateEnergyLevel(
                         deviceIndex,
                         KEY_ENERGY_MONTH_BEGIN + month * ENERGY_LEVEL_FIELDS,
-                        devices[deviceIndex]->getEnergyForMonthBegin(month)
+                        devices[deviceIndex]->getEnergyForMonthBegin(month + 1)
                         );
             }
         }

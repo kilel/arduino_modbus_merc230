@@ -44,7 +44,7 @@ void MercuryServerSerial::logData(T* data, int length, bool isRequest) {
 
 int MercuryServerSerial::calcDelay() {
     //TODO: implement correct response read
-    return 1000;
+    return 150;
 }
 
 int* MercuryServerSerial::readResponse(int& length) {

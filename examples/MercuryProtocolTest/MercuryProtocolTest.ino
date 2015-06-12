@@ -11,9 +11,9 @@
 #include <modbusRegBank.h>
 #include <modbus.h>
 
-//TODO add variables for mercury port and debug port
-
 bool debugMode = true;
+HardwareSerial *mercuryPort = &Serial1;
+HardwareSerial *debugLogger = &Serial;
 
 const int authLevel = 1;
 String password = "111111";
@@ -27,10 +27,11 @@ void setup() {
   device = new Mercury230Impl(mercuryDeviceId);
   MercuryServerSerial* server = new MercuryServerSerial();
   server->debugMode = debugMode;
-  server->setPort(&Serial);
+  server->setPort(mercuryPort);
   device->setServer(server);
-  Serial.begin(mercuryBaud);
-  Serial1.begin(mercuryBaud);
+  server->logger = debugLogger;
+  mercuryPort->begin(mercuryBaud);
+  debugLogger->begin(9600);
 }
 
 void loop() {
