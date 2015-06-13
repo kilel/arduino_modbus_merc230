@@ -49,27 +49,27 @@ private:
     EnergyLevelPhase buildEnergyPhase(int *response, MercuryException *cause);
     word* parseEnergyValue(int* response, int count);
     
-    MercuryException* checkResult(int *response, int length, int expectedLength);
+    MercuryException* checkResult(int *response, size_t length, size_t expectedLength);
 
     //1 (addr) + 1 (reqCode) + 2 (CRC)
-    static const int REQ_LENGTH_ECHO = 4;
+    static const size_t REQ_LENGTH_ECHO = 4;
     //1 (addr) + 1 (code) + 2 (CRC)
-    static const int RESP_LENGTH_ECHO = 4;
+    static const size_t RESP_LENGTH_ECHO = 4;
 
     //1 (addr) + 1 (reqCode) + 1 (authLevel) + 6 (pwd) + 2 (CRC)
-    static const int REQ_LENGTH_AUTH = 11;
+    static const size_t REQ_LENGTH_AUTH = 11;
     //1 (addr) + 1 (code) + 2 (CRC)
-    static const int RESP_LENGTH_AUTH = 4;
+    static const size_t RESP_LENGTH_AUTH = 4;
 
     // 1 (addr) + 1 (reqCode) + 1 (type/month) + 1 (tariff) + 2 (CRC)
-    static const int REQ_LENGTH_ENERGY_LEVEL = 6;
+    static const size_t REQ_LENGTH_ENERGY_LEVEL = 6;
     // 1 (addr) + 4*4=16 (levels) + 2 (CRC)
-    static const int RESP_LENGTH_ENERGY_LEVEL = 19;
+    static const size_t RESP_LENGTH_ENERGY_LEVEL = 19;
     // 1 (addr) + 3*4=12 (levels) + 2 (CRC)
-    static const int RESP_LENGTH_ENERGY_PHASE = 15;
+    static const size_t RESP_LENGTH_ENERGY_PHASE = 15;
 
-    static const int ENERGY_REQ_CODE = 0x05;
-    static const int ENERGY_REQ_TARIFF = 0x00;
+    static const size_t ENERGY_REQ_CODE = 0x05;
+    static const size_t ENERGY_REQ_TARIFF = 0x00;
 };
 
 // Table of CRC values for high order byte

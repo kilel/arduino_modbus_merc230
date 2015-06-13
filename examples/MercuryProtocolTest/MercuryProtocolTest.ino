@@ -11,30 +11,60 @@
 #include <modbusRegBank.h>
 #include <modbus.h>
 
-bool debugMode = true;
-HardwareSerial *mercuryPort = &Serial1;
-HardwareSerial *debugLogger = &Serial;
+//
+// Mercury 230 protocol test.
+// Used to test connection with mecrury 230 device.
+//
 
+//
+// Debug parameters
+//
+// Logging port
+HardwareSerial *debugLogger = &Seria2;
+// Debug mode activation flag
+bool debugMode = true;
+
+
+//
+// Mercury device settings
+//
+// Mercury device connection port
+HardwareSerial *mercuryPort = &Serial;
+// Connection speed (baud)
+const word mercuryBaud = 9600;
+// Device ID
+const int mercuryDeviceId = 84;
+// Authentication level
 const int authLevel = 1;
+// Authentication password
 String password = "111111";
 
-const word mercuryBaud = 9600;
-const int mercuryDeviceId = 84;
 
-Mercury230Impl* device;
+// Internal parameters
+Mercury230* device;
 
 void setup() {
-  device = new Mercury230Impl(mercuryDeviceId);
-  MercuryServerSerial* server = new MercuryServerSerial();
-  server->debugMode = debugMode;
-  server->setPort(mercuryPort);
-  device->setServer(server);
-  server->logger = debugLogger;
-  mercuryPort->begin(mercuryBaud);
-  debugLogger->begin(9600);
+    // Setup ports
+    if (debugMode) {
+        debugLogger->begin(9600);
+    }
+
+    // Setup mercury connection server module
+    MercuryServerSerial* server = new MercuryServerSerial(mercuryPort, mercuryBaud);
+    server->debugMode = debugMode;
+    server->logger = debugLogger;
+
+    // Create target device
+    Mercury230Impl* targetDevice = new Mercury230Impl(mercuryDeviceId);
+    targetDevice->setServer(server);
+    device = targetDevice;
 }
 
 void loop() {
-  device->auth(authLevel, password);
-  delay(5000);
+    device->echo();
+    delay(5000);
+    device->auth(authLevel, password);
+    delay(5000);
+    device->getEnergyFromReset();
+    delay(5000);
 }

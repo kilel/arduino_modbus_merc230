@@ -11,27 +11,50 @@
 #include <modbusRegBank.h>
 #include <modbus.h>
 
-//const int delayTime = 10;
-const int UPDATE_TIME = 30000;
-int lastUpdate = millis() + UPDATE_TIME + 1;
+//
+// Mercury-Modbus integration test.
+// Used to test integration with mecrury 230 device over Modbus protocol.
+// Can run in mock mode without real Mercury 230 device.
+//
 
-HardwareSerial *mercuryPort = &Serial1;
-HardwareSerial *modbusPort = &Serial;
+//
+// Debug parameters
+//
+// Logging port
 HardwareSerial *debugLogger = &Serial2;
-bool debugMode = true;
+// Debug mode activation flag
+bool debugMode = false;
+// Mock mode -- mercury devices are replaced with fake one.
+bool mockMode = false;
 
-const int authLevel = 1;
-String password = "111111";
-
+//
+// Modbus parameters
+//
+// Connection port
+HardwareSerial *modbusPort = &Serial;
+// Connection speed
 const word modbusBaud = 9600;
+// Modbus device ID
 const byte modbusDeviceId = 1;
 
+//
+// Mercury device settings
+//
+// Mercury device connection port
+HardwareSerial *mercuryPort = &Serial1;
+// Connection speed (baud)
 const word mercuryBaud = 9600;
+// Mercury device identifiers
 const int mercuryDeviceIds[] = {84};
-
 const int devicesCount = 1;
-Mercury230** devices;
+// Authentication level
+const int authLevel = 1;
+// Authentication password
+String password = "111111";
 
+//
+//Internal parameters
+//
 MercuryModbusIntegrator integrator;
 
 Mercury230* buildDevice(word id, MercuryServerSerial* server) {
@@ -40,52 +63,43 @@ Mercury230* buildDevice(word id, MercuryServerSerial* server) {
     return result;
 }
 
-void buildDevices(MercuryServerSerial* server) {
-  devices = new Mercury230*[devicesCount];
-  for(int i = 0; i < devicesCount; ++i) {
-    devices[i] = buildDevice(mercuryDeviceIds[i], server);
-  }
+Mercury230* buildMockDevice(word id) {
+    Mercury230* result = new Mercury230Mock(id);
+    return result;
+}
+
+Mercury230** buildDevices(MercuryServerSerial* server) {
+    Mercury230** devices = new Mercury230*[devicesCount];
+
+    for (int i = 0; i < devicesCount; ++i) {
+        if (!mockMode) {
+            // Regular integration, device is connected to server.
+            devices[i] = buildDevice(mercuryDeviceIds[i], server);
+        } else {
+            // In mock integration we should build mock device.
+            devices[i] = buildMockDevice(mercuryDeviceIds[i]);
+        }
+    }
+
+    return devices;
 }
 
 void setup() {
-  MercuryServerSerial* server = new MercuryServerSerial();
-  buildDevices(server);
-  integrator.setDevices(devicesCount, devices);
-  integrator.setAuthLevel(authLevel);
-  integrator.setPassword(password);
-  integrator.init(modbusBaud, modbusDeviceId);
-  integrator.setModbusPort(modbusPort);
-  integrator.debugLogger = debugLogger;
-  
-  server->debugMode = debugMode;
-  server->setPort(mercuryPort);
-  server->logger = debugLogger;
-  mercuryPort->begin(mercuryBaud);
-  debugLogger->begin(modbusBaud);
-  
-  integrator.updateData();
-}
+    // Setup ports
+    if (debugMode) {
+        debugLogger->begin(9600);
+    }
 
-//TODO make updating data run each N seconds.
+    MercuryServerSerial* server = new MercuryServerSerial(mercuryPort, mercuryBaud);
+    server->debugMode = debugMode;
+    server->logger = debugLogger;
+
+    integrator.init(modbusPort, modbusBaud, modbusDeviceId);
+    integrator.initAuth(authLevel, password);
+    integrator.initLogging(debugLogger, debugMode);
+    integrator.initDevices(devicesCount, buildDevices(server));
+}
 
 void loop() {
-  if(modbusPort->available() > 0) {
     integrator.run();
-//    integrator.updateData();
-if(millis() - lastUpdate > UPDATE_TIME) {
-integrator.updateData();
-lastUpdate = millis();
-
-}
-  }
-  
-//  if(timeSinceLastUpdate >= UPDATE_TIME) {
-//    integrator.updateData();
-//    timeSinceLastUpdate = 0;    
-//  } else {
-//    timeSinceLastUpdate += delayTime;
-//  }
-  
-//  delay(delayTime);
-  
 }

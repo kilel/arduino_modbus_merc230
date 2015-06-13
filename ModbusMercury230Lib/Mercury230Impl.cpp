@@ -101,7 +101,7 @@ int* Mercury230Impl::sendEcho() {
     fillCRC(request, REQ_LENGTH_ECHO);
 
     //send
-    int resLength = 0;
+    size_t resLength = 0;
     int *response = server->process(REQ_LENGTH_ECHO, request, resLength);
     MercuryException* cause = checkResult(response, resLength, RESP_LENGTH_ECHO);
     
@@ -137,7 +137,7 @@ int* Mercury230Impl::sendAuthRequest(byte authLevel, String password) {
     fillCRC(request, REQ_LENGTH_AUTH);
 
     //send
-    int resLength = 0;
+    size_t resLength = 0;
     int *response = server->process(REQ_LENGTH_AUTH, request, resLength);
     MercuryException* cause = checkResult(response, resLength, RESP_LENGTH_AUTH);
     
@@ -171,7 +171,7 @@ int* Mercury230Impl::sendEnergyMonthRequest(byte opCode, byte month, MercuryExce
     fillCRC(request, REQ_LENGTH_ENERGY_LEVEL);
 
     //send
-    int resLength = 0;
+    size_t resLength = 0;
     int *response = server->process(REQ_LENGTH_ENERGY_LEVEL, request, resLength);
     cause = checkResult(response, resLength, RESP_LENGTH_ENERGY_LEVEL);
 
@@ -195,7 +195,7 @@ int* Mercury230Impl::sendEnergyPhaseRequest(byte opCode, MercuryException *&caus
     fillCRC(request, REQ_LENGTH_ENERGY_LEVEL);
 
     //send
-    int resLength = 0;
+    size_t resLength = 0;
     int *response = server->process(REQ_LENGTH_ENERGY_LEVEL, request, resLength);
     cause = checkResult(response, resLength, RESP_LENGTH_ENERGY_PHASE);
 
@@ -262,7 +262,7 @@ word* Mercury230Impl::parseEnergyValue(int* response, int count) {
     return data;
 }
 
-MercuryException* Mercury230Impl::checkResult(int *response, int length, int expectedLength) {
+MercuryException* Mercury230Impl::checkResult(int *response, size_t length, size_t expectedLength) {
     if (length != expectedLength) {
         delete[] response;
         return new MercuryException(String("Response length is expected to be ") + String(expectedLength) + String("but was ") + String(length));

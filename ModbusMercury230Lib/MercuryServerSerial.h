@@ -5,27 +5,30 @@
 
 class MercuryServerSerial : public MercuryServer {
 public:
-    MercuryServerSerial();
+    MercuryServerSerial(HardwareSerial *port, unsigned long baud);
     virtual ~MercuryServerSerial();
 
+    virtual int* process(size_t length, byte* data, size_t &resLength);
 
-    virtual int* process(int length, byte* data, int &resLength);
-
-    void setPort(HardwareSerial *value) {
+    void setPort(HardwareSerial *value, unsigned long baud) {
         this->port = value;
+        initPort(baud);
     }
 
     bool debugMode;
-	HardwareSerial *logger;
+    HardwareSerial *logger;
 
 private:
     HardwareSerial *port;
-    
+    unsigned long baud;
+
+    void initPort(unsigned long baud);
     template <class T>
-    void logData(T *data, int length, bool isRequest);
-    
-    int calcDelay();
-    int* readResponse(int &length);
+    void logData(T *data, size_t length, bool isRequest);
+
+    unsigned long responseTimeout();
+    unsigned long silenceTimeout();
+    int* readResponse(size_t &length);
 
 };
 

@@ -6,11 +6,6 @@
 #include "MercuryException.h"
 
 struct EnergyLevel {
-    const word active;
-    const word activeRevers;
-    const word passive;
-    const word passiveRevers;
-
     MercuryException* cause;
 
     EnergyLevel(word a, word aR, word p, word pR, MercuryException *cause = 0) :
@@ -20,26 +15,63 @@ struct EnergyLevel {
     passiveRevers(pR),
     cause(cause) {
     }
-    
-    ~EnergyLevel() {
-        if(cause != 0) {
-            delete cause;
-        }
+
+    word getActiveHi() {
+        return (active >> 8) & 0xFF;
     }
+
+    word getActiveLow() {
+        return active & 0xFF;
+    }
+
+    word getActiveReversHi() {
+        return (activeRevers >> 8) & 0xFF;
+    }
+
+    word getActiveReversLow() {
+        return activeRevers & 0xFF;
+    }
+
+    word getPassiveHi() {
+        return (passive >> 8) & 0xFF;
+    }
+
+    word getPassiveLow() {
+        return passive & 0xFF;
+    }
+
+    word getPassiveReversHi() {
+        return (passiveRevers >> 8) & 0xFF;
+    }
+
+    word getPassiveReversLow() {
+        return passiveRevers & 0xFF;
+    }
+
+private:
+    const word active;
+    const word activeRevers;
+    const word passive;
+    const word passiveRevers;
 };
 
 struct EnergyLevelPhase {
-    const word phase[3];
     MercuryException *cause;
 
-    EnergyLevelPhase(word a, word b, word c, MercuryException *cause = 0) : phase({a, b, c}), cause(cause) {
+    EnergyLevelPhase(word a, word b, word c, MercuryException *cause = 0) :
+    phase({a, b, c}), cause(cause) {
     }
-    
-    ~EnergyLevelPhase() {
-        if(cause != 0) {
-            delete cause;
-        }
+
+    byte getHi(int idx) {
+        return (phase[idx] >> 8) & 0xFF;
     }
+
+    byte getLow(int idx) {
+        return phase[idx] & 0xFF;
+    }
+
+private:
+    const word phase[3];
 };
 
 class Mercury230 {

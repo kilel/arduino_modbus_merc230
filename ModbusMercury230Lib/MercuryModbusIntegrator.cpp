@@ -13,26 +13,32 @@ slave(modbusSlave()) {
 MercuryModbusIntegrator::~MercuryModbusIntegrator() {
 }
 
-void MercuryModbusIntegrator::setDevices(int count, Mercury230 **target) {
+void MercuryModbusIntegrator::initDevices(int count, Mercury230 **target) {
     logString("Setting devices: " + String(count));
     this->deviceCount = count;
     this->devices = target;
 }
 
-void MercuryModbusIntegrator::init(word modbusBaud, byte modbusDeviceId) {
+void MercuryModbusIntegrator::init(HardwareSerial *modbusPort, word modbusBaud, byte modbusDeviceId) {
     logString("Setting modbus baud: " + String(modbusBaud));
+    slave.setPort(modbusPort);
     slave.setBaud(modbusBaud);
     createRegBank(modbusDeviceId);
     slave._device = &regBank;
 }
 
-void MercuryModbusIntegrator::run() {
-    logString("Running slave");
-    slave.run();
+void MercuryModbusIntegrator::initAuth(int level, String password) {
+    this->authLevel = level;
+    this->password = password;
+}
+
+void MercuryModbusIntegrator::initLogging(HardwareSerial *logPort, bool mode) {
+    this->debugLogger = logPort;
+    this->debugMode = mode;
 }
 
 void MercuryModbusIntegrator::createRegBank(byte deviceId) {
-    logString("Creating modbus device: " + String(deviceId));
+    logString("Registering modbus devices: " + String(deviceId));
 
     regBank = modbusDevice();
     regBank.setId(deviceId);
@@ -59,88 +65,131 @@ void MercuryModbusIntegrator::createRegBank(byte deviceId) {
     }
 }
 
+void MercuryModbusIntegrator::run() {
+    tryAnswerModbus();
+    updateData();
+    tryAnswerModbus();
+}
+
+void MercuryModbusIntegrator::tryAnswerModbus() {
+    while (slave.getPort()->available() > 0) {
+        logString("Answering on Modbus request");
+        slave.run();
+    }
+}
+
 void MercuryModbusIntegrator::updateData() {
+    logString("Starting updating new batch of data");
     for (int deviceIndex = 0; deviceIndex < deviceCount; ++deviceIndex) {
-        int authResult = devices[deviceIndex]->auth(authLevel, password);
+        Mercury230* device = devices[deviceIndex];
+        byte deviceId = device->id;
 
-        if (authResult == 0) {
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_RESET, devices[deviceIndex]->getEnergyFromReset());
+        logString("Updating data for device " + String(deviceId));
 
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_YEAR, devices[deviceIndex]->getEnergyForYear());
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_YEAR, devices[deviceIndex]->getEnergyForPrevYear());
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_DAY, devices[deviceIndex]->getEnergyForDay());
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_DAY, devices[deviceIndex]->getEnergyForPrevDay());
+        int authResult = device->auth(authLevel, password);
 
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_YEAR_BEGIN, devices[deviceIndex]->getEnergyForYearBegin());
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_YEAR_BEGIN, devices[deviceIndex]->getEnergyForPrevYearBegin());
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_DAY_BEGIN, devices[deviceIndex]->getEnergyForDayBegin());
-            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_DAY_BEGIN, devices[deviceIndex]->getEnergyForPrevDayBegin());
+        if (authResult != 0) {
+            logString("Authentication failed for device " + String(deviceId) + ". Code: " + String(authResult));
+        } else {
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_RESET, device->getEnergyFromReset());
 
-            updateEnergyPhase(deviceIndex, KEY_ENERGY_PHASE, devices[deviceIndex]->getPhaseActiveEnergyLevel());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_YEAR, device->getEnergyForYear());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_YEAR, device->getEnergyForPrevYear());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_DAY, device->getEnergyForDay());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_DAY, device->getEnergyForPrevDay());
+
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_YEAR_BEGIN, device->getEnergyForYearBegin());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_YEAR_BEGIN, device->getEnergyForPrevYearBegin());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_DAY_BEGIN, device->getEnergyForDayBegin());
+            updateEnergyLevel(deviceIndex, KEY_ENERGY_PREV_DAY_BEGIN, device->getEnergyForPrevDayBegin());
+
+            updateEnergyPhase(deviceIndex, KEY_ENERGY_PHASE, device->getPhaseActiveEnergyLevel());
 
             for (int month = 0; month < MONTHS_COUNT; ++month) {
-                updateEnergyLevel(
-                        deviceIndex,
-                        KEY_ENERGY_MONTH + month * ENERGY_LEVEL_FIELDS,
-                        devices[deviceIndex]->getEnergyForMonth(month + 1)
-                        );
-                updateEnergyLevel(
-                        deviceIndex,
-                        KEY_ENERGY_MONTH_BEGIN + month * ENERGY_LEVEL_FIELDS,
-                        devices[deviceIndex]->getEnergyForMonthBegin(month + 1)
-                        );
+                int monthShift = month * ENERGY_LEVEL_FIELDS;
+                updateEnergyLevel(deviceIndex, KEY_ENERGY_MONTH + monthShift, device->getEnergyForMonth(month + 1));
+                updateEnergyLevel(deviceIndex, KEY_ENERGY_MONTH_BEGIN + monthShift, device->getEnergyForMonthBegin(month + 1));
             }
         }
     }
 }
 
 void MercuryModbusIntegrator::registerEnergyLevel(int deviceIndex, word startIndex) {
-    logString("Creating energy level from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
-            + " device index: " + String(deviceIndex));
-    for (int i = 0; i < 4; ++i) {
+    byte deviceId = devices[deviceIndex]->id;
+    int shift = getDeviceSpan(deviceIndex) + startIndex;
+    logString("Registering energy level for device " + String(deviceId)
+            + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
+    for (int i = 0; i < ENERGY_LEVEL_FIELDS; ++i) {
         regBank.add(getDeviceSpan(deviceIndex) + startIndex + i);
+        regBank.add(shift + i);
     }
 }
 
 void MercuryModbusIntegrator::registerEnergyPhase(int deviceIndex, word startIndex) {
-    logString("Creating energy phase from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
-            + " device index: " + String(deviceIndex));
-    for (int i = 0; i < 3; ++i) {
-        regBank.add(getDeviceSpan(deviceIndex) + startIndex + i);
+    byte deviceId = devices[deviceIndex]->id;
+    int shift = getDeviceSpan(deviceIndex) + startIndex;
+    logString("Registering energy phase for device " + String(deviceId)
+            + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
+    for (int i = 0; i < ENERGY_PHASE_FIELDS; ++i) {
+        regBank.add(shift + i);
     }
 }
 
 void MercuryModbusIntegrator::updateEnergyLevel(int deviceIndex, word startIndex, EnergyLevel level) {
+    byte deviceId = devices[deviceIndex]->id;
+    int shift = getDeviceSpan(deviceIndex) + startIndex;
     if (level.cause != 0) {
-        logString("Error updating energy level from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
-                + " device index: " + String(deviceIndex) + ". Cause: " + level.cause->getMessage());
+        logString("Error updating energy level for device " + String(deviceId)
+                + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
+        logString("Cause: " + level.cause->getMessage());
+        delete level.cause;
         return;
     }
 
-    logString("Updating energy level from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
-            + " device index: " + String(deviceIndex));
-    doWriteData(getDeviceSpan(deviceIndex) + startIndex, level.active);
-    doWriteData(getDeviceSpan(deviceIndex) + startIndex + 1, level.activeRevers);
-    doWriteData(getDeviceSpan(deviceIndex) + startIndex + 2, level.passive);
-    doWriteData(getDeviceSpan(deviceIndex) + startIndex + 3, level.passiveRevers);
+    logString("Updating energy level for device " + String(deviceId)
+            + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
+
+    doWriteData(shift, level.getActiveHi());
+    doWriteData(shift + 1, level.getActiveLow());
+
+    doWriteData(shift + 2, level.getActiveReversHi());
+    doWriteData(shift + 3, level.getActiveReversHi());
+
+    doWriteData(shift + 4, level.getPassiveHi());
+    doWriteData(shift + 5, level.getPassiveLow());
+
+    doWriteData(shift + 6, level.getPassiveReversHi());
+    doWriteData(shift + 7, level.getPassiveReversLow());
+
+    //Try to answer for modbus requests after updating a value
+    tryAnswerModbus();
 }
 
 void MercuryModbusIntegrator::updateEnergyPhase(int deviceIndex, word startIndex, EnergyLevelPhase level) {
+    byte deviceId = devices[deviceIndex]->id;
+    int shift = getDeviceSpan(deviceIndex) + startIndex;
     if (level.cause != 0) {
-        logString("Updating energy phase from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
-                + " device index: " + String(deviceIndex) + ". Cause: " + level.cause->getMessage());
+        logString("Error updating energy phase for device " + String(deviceId)
+                + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
+        logString("Cause: " + level.cause->getMessage());
+        delete level.cause;
         return;
     }
 
-    logString("Updating energy phase from start index: " + String(getDeviceSpan(deviceIndex) + startIndex)
-            + " device index: " + String(deviceIndex));
-    for (int i = 0; i < 3; ++i) {
-        doWriteData(getDeviceSpan(deviceIndex) + startIndex + i, level.phase[i]);
+    logString("Updating energy level for device " + String(deviceId)
+            + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
+
+    for (int i = 0; i < ENERGY_PHASE_FIELDS; i += 2) {
+        doWriteData(shift + i, level.getHi(i));
+        doWriteData(shift + i + 1, level.getLow(i));
     }
+
+    //Try to answer for modbus requests after updating a value
+    tryAnswerModbus();
 }
 
 void MercuryModbusIntegrator::doWriteData(word cell, word value) {
-    logString("Updating data in cell: " + String(cell) + " with value: " + String(value));
+    //logString("Updating data in cell: " + String(cell) + " with value: " + String(value));
     slave._device->set(cell, value);
 }
 

@@ -8,7 +8,7 @@ public:
     MercuryServer(): baud(1) {}
     virtual ~MercuryServer() {}
 
-    virtual int* process(int length, byte* data, int &resLength) = 0;
+    virtual int* process(size_t length, byte* data, size_t &resLength) = 0;
     
     void setBaud (int value) {
         baud = value;
