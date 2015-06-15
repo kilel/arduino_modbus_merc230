@@ -17,35 +17,35 @@ struct EnergyLevel {
     }
 
     word getActiveHi() {
-        return (active >> 8) & 0xFF;
+        return (active >> 8) & 0xFFFF;
     }
 
     word getActiveLow() {
-        return active & 0xFF;
+        return active & 0xFFFF;
     }
 
     word getActiveReversHi() {
-        return (activeRevers >> 8) & 0xFF;
+        return (activeRevers >> 8) & 0xFFFF;
     }
 
     word getActiveReversLow() {
-        return activeRevers & 0xFF;
+        return activeRevers & 0xFFFF;
     }
 
     word getPassiveHi() {
-        return (passive >> 8) & 0xFF;
+        return (passive >> 8) & 0xFFFF;
     }
 
     word getPassiveLow() {
-        return passive & 0xFF;
+        return passive & 0xFFFF;
     }
 
     word getPassiveReversHi() {
-        return (passiveRevers >> 8) & 0xFF;
+        return (passiveRevers >> 8) & 0xFFFF;
     }
 
     word getPassiveReversLow() {
-        return passiveRevers & 0xFF;
+        return passiveRevers & 0xFFFF;
     }
 
 private:
@@ -63,11 +63,11 @@ struct EnergyLevelPhase {
     }
 
     byte getHi(int idx) {
-        return (phase[idx] >> 8) & 0xFF;
+        return (phase[idx] >> 8) & 0xFFFF;
     }
 
     byte getLow(int idx) {
-        return phase[idx] & 0xFF;
+        return phase[idx] & 0xFFFF;
     }
 
 private:

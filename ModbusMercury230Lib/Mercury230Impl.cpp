@@ -259,6 +259,7 @@ unsigned long* Mercury230Impl::parseEnergyValue(int* response, int count) {
         data[i] = value;
     }
 
+    delete[] response;
     return data;
 }
 
@@ -273,18 +274,20 @@ MercuryException* Mercury230Impl::checkResult(int *response, size_t length, size
         tempData[i] = (byte) response[i];
     }
 
-    int crc = (tempData[length - 2] << 8) & tempData[length - 1];
+    word crc = ((word) tempData[length - 2] << 8) & tempData[length - 1];
     fillCRC(tempData, length);
-    int correctCrc = (tempData[length - 2] << 8) & tempData[length - 1];
-
+    word correctCrc = ((word) tempData[length - 2] << 8) & tempData[length - 1];
+    delete[] tempData;
+    
     if (crc != correctCrc) {
         delete[] response;
         return new MercuryException(String("Response CRC is incorrect"));
     }
 
     if (response[0] != id) {
+        int foundId = response[0];
         delete[] response;
-        return new MercuryException(String("Response came from device ") + String(response[0]) + String("but expected from ") + String(id));
+        return new MercuryException(String("Response came from device ") + String(foundId) + String("but expected from ") + String(id));
     }
     
     //Success
