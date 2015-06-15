@@ -47,7 +47,7 @@ private:
 
     EnergyLevel buildEnergyLevel(int *response, MercuryException *cause);
     EnergyLevelPhase buildEnergyPhase(int *response, MercuryException *cause);
-    word* parseEnergyValue(int* response, int count);
+    unsigned long* parseEnergyValue(int* response, int count);
     
     MercuryException* checkResult(int *response, size_t length, size_t expectedLength);
 

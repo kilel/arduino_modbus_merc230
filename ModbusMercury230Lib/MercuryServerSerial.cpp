@@ -31,6 +31,9 @@ void MercuryServerSerial::logData(T* data, size_t length, bool isRequest) {
     if (!debugMode || logger == 0) {
         return;
     }
+    
+    //Timestamp
+    logger->print(String(millis()) + String(" : "));
 
     if (isRequest) {
         logger->write("#Request: \n");

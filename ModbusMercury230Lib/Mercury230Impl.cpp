@@ -230,23 +230,23 @@ void Mercury230Impl::preProcessRequest(byte* data, int length) {
 }
 
 EnergyLevel Mercury230Impl::buildEnergyLevel(int* response, MercuryException *cause) {
-    word *data = parseEnergyValue(response, 4);
+    unsigned long *data = parseEnergyValue(response, 4);
     EnergyLevel result = EnergyLevel(data[0], data[1], data[2], data[3], cause);
     delete[] data;
     return result;
 }
 
 EnergyLevelPhase Mercury230Impl::buildEnergyPhase(int* response, MercuryException *cause) {
-    word *data = parseEnergyValue(response, 3);
+    unsigned long *data = parseEnergyValue(response, 3);
     EnergyLevelPhase result = EnergyLevelPhase(data[0], data[1], data[2], cause);
     delete[] data;
     return result;
 }
 
-word* Mercury230Impl::parseEnergyValue(int* response, int count) {
-    word *data = new word[count];
+unsigned long* Mercury230Impl::parseEnergyValue(int* response, int count) {
+    unsigned long *data = new unsigned long[count];
     for (int i = 0; i < count; ++i) {
-        word value = 0;
+        unsigned long value = 0;
         // addr | 4 bytes of value | again | ...
         int* startPtr = response + 1 + 4 * i;
 

@@ -84,13 +84,14 @@ void MercuryModbusIntegrator::updateData() {
         Mercury230* device = devices[deviceIndex];
         byte deviceId = device->id;
 
-        logString("Updating data for device " + String(deviceId));
+        logString("Call authentication for device " + String(deviceId));
 
         int authResult = device->auth(authLevel, password);
 
         if (authResult != 0) {
             logString("Authentication failed for device " + String(deviceId) + ". Code: " + String(authResult));
         } else {
+            logString("Updating data for device " + String(deviceId));
             updateEnergyLevel(deviceIndex, KEY_ENERGY_RESET, device->getEnergyFromReset());
 
             updateEnergyLevel(deviceIndex, KEY_ENERGY_YEAR, device->getEnergyForYear());
@@ -199,7 +200,7 @@ word MercuryModbusIntegrator::getDeviceSpan(int deviceIndex) {
 
 void MercuryModbusIntegrator::logString(String data) {
     if (debugMode && debugLogger != 0) {
-        debugLogger->println(data);
+        debugLogger->println(String(millis()) + String(" : ") + data);
     }
 }
 

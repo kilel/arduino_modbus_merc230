@@ -8,7 +8,7 @@
 struct EnergyLevel {
     MercuryException* cause;
 
-    EnergyLevel(word a, word aR, word p, word pR, MercuryException *cause = 0) :
+    EnergyLevel(unsigned long a, unsigned long aR, unsigned long p, unsigned long pR, MercuryException *cause = 0) :
     active(a),
     activeRevers(aR),
     passive(p),
@@ -49,16 +49,16 @@ struct EnergyLevel {
     }
 
 private:
-    const word active;
-    const word activeRevers;
-    const word passive;
-    const word passiveRevers;
+    const unsigned long active;
+    const unsigned long activeRevers;
+    const unsigned long passive;
+    const unsigned long passiveRevers;
 };
 
 struct EnergyLevelPhase {
     MercuryException *cause;
 
-    EnergyLevelPhase(word a, word b, word c, MercuryException *cause = 0) :
+    EnergyLevelPhase(unsigned long a, unsigned long b, unsigned long c, MercuryException *cause = 0) :
     phase({a, b, c}), cause(cause) {
     }
 
@@ -71,7 +71,7 @@ struct EnergyLevelPhase {
     }
 
 private:
-    const word phase[3];
+    const unsigned long phase[3];
 };
 
 class Mercury230 {
