@@ -121,7 +121,6 @@ void MercuryModbusIntegrator::registerEnergyLevel(int deviceIndex, word startInd
     logString("Registering energy level for device " + String(deviceId)
             + " with shift: " + String(startIndex) + " (real shift = " + shift + ")");
     for (int i = 0; i < ENERGY_LEVEL_FIELDS; ++i) {
-        regBank.add(getDeviceSpan(deviceIndex) + startIndex + i);
         regBank.add(shift + i);
     }
 }

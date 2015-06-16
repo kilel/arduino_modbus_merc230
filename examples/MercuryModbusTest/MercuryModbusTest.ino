@@ -22,6 +22,8 @@
 //
 // Logging port
 HardwareSerial *debugLogger = &Serial2;
+// Logging port speed (baud)
+const word loggerBaud = 9600;
 // Debug mode activation flag
 bool debugMode = false;
 // Mock mode -- mercury devices are replaced with fake one.
@@ -87,7 +89,7 @@ Mercury230** buildDevices(MercuryServerSerial* server) {
 void setup() {
     // Setup ports
     if (debugMode) {
-        debugLogger->begin(9600);
+        debugLogger->begin(loggerBaud);
     }
 
     MercuryServerSerial* server = new MercuryServerSerial(mercuryPort, mercuryBaud);
