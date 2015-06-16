@@ -94,10 +94,10 @@ void setup() {
     server->debugMode = debugMode;
     server->logger = debugLogger;
 
-    integrator.init(modbusPort, modbusBaud, modbusDeviceId);
     integrator.initAuth(authLevel, password);
     integrator.initLogging(debugLogger, debugMode);
     integrator.initDevices(devicesCount, buildDevices(server));
+    integrator.init(modbusPort, modbusBaud, modbusDeviceId);
 }
 
 void loop() {
