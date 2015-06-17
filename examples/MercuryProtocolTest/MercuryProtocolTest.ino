@@ -20,7 +20,9 @@
 // Debug parameters
 //
 // Logging port
-HardwareSerial *debugLogger = &Seria2;
+HardwareSerial *debugLogger = &Serial2;
+// Logging port speed (baud)
+const word loggerBaud = 9600;
 // Debug mode activation flag
 bool debugMode = true;
 
@@ -46,7 +48,7 @@ Mercury230* device;
 void setup() {
     // Setup ports
     if (debugMode) {
-        debugLogger->begin(9600);
+        debugLogger->begin(loggerBaud);
     }
 
     // Setup mercury connection server module
